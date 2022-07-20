@@ -3,6 +3,7 @@ package com.w.reggie.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.w.reggie.common.R;
+import com.w.reggie.common.RedisClear;
 import com.w.reggie.dto.DishDto;
 import com.w.reggie.entity.Category;
 import com.w.reggie.entity.Dish;
@@ -47,6 +48,9 @@ public class DishController {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RedisClear redisClear;
 
     /**
      * 新增菜品
@@ -152,6 +156,9 @@ public class DishController {
         Dish dish = dishService.getById(ids);
         dish.setStatus(status);
         dishService.updateById(dish);
+        //清理所有菜品的缓存数据
+        Set keys = redisTemplate.keys("dish_*");
+        redisTemplate.delete(keys);
         return R.success("修改成功");
     }
 
@@ -163,6 +170,7 @@ public class DishController {
     @DeleteMapping()
     public R<String> delete(Long ids){
         dishService.deleteWithFlavor(ids);
+        redisClear.clear();
         return R.success("删除成功");
     }
 

@@ -3,7 +3,10 @@ package com.w.reggie.filter;
 import com.alibaba.fastjson.JSON;
 import com.w.reggie.common.BaseContext;
 import com.w.reggie.common.R;
+import com.w.reggie.entity.Employee;
+import com.w.reggie.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.AntPathMatcher;
 
 import javax.servlet.*;
@@ -19,6 +22,9 @@ import java.io.IOException;
 @WebFilter(filterName = "loginCheckFilter",urlPatterns = "/*")
 @Slf4j
 public class LoginCheckFilter implements Filter {
+
+    @Autowired
+    private EmployeeService employeeService;
 
     //路径匹配器，支持通配符
     public static final AntPathMatcher PATH_MATCHER=new AntPathMatcher();
@@ -44,6 +50,21 @@ public class LoginCheckFilter implements Filter {
                 "/user/login"
         };
 
+
+
+//        --------------------------------------------------------------------
+//        Long ifUserId = (Long)  httpServletRequest.getSession().getAttribute("user");
+//        Employee byId = employeeService.getById(ifUserId);
+//        if (byId==null){
+//            log.info("非后台用户");
+//            //5 如果未登录，则返回未登录结果，通过输出流的方式向客户端反应结果
+//            httpServletResponse.getWriter().write(JSON.toJSONString(R.error("NOTLOGIN")));
+//            return;
+//        }
+
+
+//        --------------------------------------------------------------------
+
         boolean check = check(urls, requestURI);
         //3
         if (check){
@@ -51,6 +72,7 @@ public class LoginCheckFilter implements Filter {
             chain.doFilter(httpServletRequest,httpServletResponse);
             return;
         }
+
         //4-1
         if (httpServletRequest.getSession().getAttribute("employee")!=null){
             log.info("用户已登录，id为{}",httpServletRequest.getSession().getAttribute("employee"));
@@ -74,6 +96,8 @@ public class LoginCheckFilter implements Filter {
             chain.doFilter(httpServletRequest,httpServletResponse);
             return;
         }
+
+
         log.info("用户未登录");
         //5 如果未登录，则返回未登录结果，通过输出流的方式向客户端反应结果
         httpServletResponse.getWriter().write(JSON.toJSONString(R.error("NOTLOGIN")));
